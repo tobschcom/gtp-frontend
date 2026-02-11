@@ -27,10 +27,10 @@ export default function Header() {
         <div className="flex justify-start items-center w-full">
           <div className="flex space-x-0 xl:space-x-6 w-full h-full">
             <div className="flex justify-between items-start h-full relative">
-              <Link href="/" className="hidden md:block">
+              <Link href="/" className="hidden md:block gtp-native-hide-logo">
                 <Image src="/logo_icons_full.svg" alt="growthepie Icons Logo" width={206} height={45} />
               </Link>
-              <Link href="/" className="block md:hidden">
+              <Link href="/" className="block md:hidden gtp-native-hide-logo">
                 <Image src="/logo_icons_full.svg" alt="growthepie Icons Logo" width={288} height={63} />
               </Link>
             </div>

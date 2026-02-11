@@ -41,7 +41,7 @@ export default function Header({
         <div className="flex justify-start items-center w-full">
           <div className="flex space-x-0 xl:space-x-6 w-full h-full">
             <div className="flex justify-between items-start h-full relative w-full left-1 ">
-              <Link href="/" className="flex gap-x-1">
+              <Link href="/" className="flex gap-x-1 gtp-native-hide-logo">
                 <Image
                   src="/logo_labels_full.svg"
                   alt="Forest"

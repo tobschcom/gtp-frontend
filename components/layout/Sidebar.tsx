@@ -152,7 +152,7 @@ export default function Sidebar({ isMobile = false }: SidebarProps) {
           ></div> */}
           <div className="relative w-screen p-[20px] z-[999] flex flex-col justify-items-start select-none overflow-hidden">
             <div className="flex px-[5px] justify-between gap-x-[20px] items-end w-full pointer-events-auto">
-              <Link href="/" className="h-[36px] w-[33.44px] relative">
+              <Link href="/" className="h-[36px] w-[33.44px] relative gtp-native-hide-logo">
                 {/* <Image
                     src="/logo_pie_only.png"
                     alt="Forest"

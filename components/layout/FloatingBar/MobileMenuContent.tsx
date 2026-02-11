@@ -133,7 +133,7 @@ const MobileMenuContent = memo(function MobileMenuContent({ onClose, isOpen }: M
         {/* Header */}
         <div ref={headerRef} className="p-[20px] pb-0 hidden">
           <div className="flex px-[5px] justify-between gap-x-[15px] items-center w-full">
-            <Link href="/" onClick={onClose} className="h-[36px] w-[33.44px] relative block">
+            <Link href="/" onClick={onClose} className="h-[36px] w-[33.44px] relative block gtp-native-hide-logo">
               {/* SVG Logo (copied from Sidebar.tsx mobile) */}
               <svg viewBox="0 0 43 46" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M13.9743 13.991C13.8893 12.805 14.2123 11.716 14.9053 10.66C15.3693 9.958 16.0273 9.2 16.7533 8.365C18.6263 6.208 20.9463 3.538 21.5143 0C22.7493 2.712 22.1503 5.349 20.7833 7.774C20.1683 8.864 19.4873 9.647 18.8373 10.394C18.0723 11.273 17.3513 12.102 16.8333 13.321C16.5483 13.984 16.3863 14.619 16.3103 15.24L13.9743 13.991Z" fill="url(#paint0_radial_mobile_menu_content)" />

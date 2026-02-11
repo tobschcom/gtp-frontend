@@ -25,6 +25,41 @@ The [`gtp-frontend`](https://github.com/growthepie/gtp-frontend) repository is b
 - **Contribute**: Fork our repo, make your changes, and submit a pull request.
 - **Join Our Community**: For discussions and collaboration, join us on [Discord](https://discord.gg/pKzYwm7h).
 
+## iOS App (Capacitor)
+
+This repository now includes a Capacitor baseline so we can ship a native iOS shell
+that loads the live growthepie web app and stays in sync with website updates.
+
+### Setup
+
+Prerequisites: macOS with full Xcode installed (not only Command Line Tools) and CocoaPods available.
+
+1. Install dependencies:
+   ```bash
+   yarn install
+   ```
+2. Create the iOS project once:
+   ```bash
+   yarn cap:add:ios
+   ```
+3. Sync Capacitor config/plugins:
+   ```bash
+   yarn cap:sync:ios
+   ```
+4. Open Xcode:
+   ```bash
+   yarn cap:open:ios
+   ```
+
+### Hosted URL
+
+- Default mobile URL: `https://growthepie.com`
+- Override by setting `CAPACITOR_SERVER_URL` in your environment before sync/run.
+  Example:
+  ```bash
+  CAPACITOR_SERVER_URL=https://dev.growthepie.com yarn cap:sync:ios
+  ```
+
 Your involvement is vital to growthepie and our mission to enhance transparency in the Ethereum Layer 2 ecosystem.
 
 ## License

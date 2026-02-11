@@ -941,7 +941,7 @@ const GTPLogoOld = () => {
   return (
     <Link
       href="/"
-      className={`${isSidebarOpen ? "relative h-[45.07px] w-[192.87px] block" : "relative h-[45.07px] w-[40.91px] min-w-[40.91px] overflow-clip"} transition-all duration-sidebar ease-sidebar`}
+      className={`${isSidebarOpen ? "relative h-[45.07px] w-[192.87px] block" : "relative h-[45.07px] w-[40.91px] min-w-[40.91px] overflow-clip"} gtp-native-hide-logo transition-all duration-sidebar ease-sidebar`}
       title="Link to growthepie"
       aria-label="Link to growthepie"
     >

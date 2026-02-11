@@ -720,3 +720,8 @@ input:focus-visible {
   opacity: 0;
   transition: opacity 100ms ease-out; /* Quick fade-out */
 }
+
+html.gtp-native-app .gtp-native-hide-logo {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}

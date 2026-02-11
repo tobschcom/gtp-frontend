@@ -10,10 +10,18 @@
     "postbuild": "next-sitemap",
     "start": "next start",
     "lint": "eslint .",
+    "cap:add:ios": "cap add ios",
+    "cap:copy": "cap copy",
+    "cap:sync": "cap sync",
+    "cap:sync:ios": "cap sync ios",
+    "cap:open:ios": "cap open ios",
+    "cap:run:ios": "cap run ios",
     "icons:update": "dotenv -e .env.local -- tsx ./lib/figma.ts && node ./lib/icons.mjs",
     "figma-icons": "npm run icons:update"
   },
   "dependencies": {
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/ios": "^7.0.0",
     "@download/blockies": "^1.0.3",
     "@dsnp/parquetjs": "^1.7.0",
     "@floating-ui/react": "^0.27.6",
@@ -74,6 +82,7 @@
     "node": ">=22.0.0"
   },
   "devDependencies": {
+    "@capacitor/cli": "^7.0.0",
     "@iconify/react": "^4.1.0",
     "@iconify/tools": "^2.2.6",
     "@iconify/types": "^2.0.0",

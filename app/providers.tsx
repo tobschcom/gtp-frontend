@@ -11,6 +11,7 @@ import { ToastProvider } from "@/components/toast/GTPToast";
 import { NavigationProvider } from "@/contexts/NavigationContext";
 import { useEffect } from "react";
 import { gtpIconsLoader } from "@/utils/gtp-icons-loader";
+import { Capacitor } from "@capacitor/core";
 
 // load icons
 // addCollection(GTPIcons);
@@ -111,6 +112,15 @@ export function Providers({ children, forcedTheme }: ProvidersProps) {
   useEffect(() => {
     // Start loading icons immediately
     gtpIconsLoader.loadIcons();
+  }, []);
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    document.documentElement.classList.add("gtp-native-app");
+    return () => {
+      document.documentElement.classList.remove("gtp-native-app");
+    };
   }, []);
 
   return (

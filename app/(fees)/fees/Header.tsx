@@ -21,7 +21,7 @@ export default function Header() {
           </div> */}
 
           <div className="flex justify-between items-start h-full relative w-full">
-            <Link href="/" className="flex gap-x-1">
+            <Link href="/" className="flex gap-x-1 gtp-native-hide-logo">
               {/* <div className="h-[45px] w-[206px]"> */}
               <Image
                 src="/logo_fees_full.png"
