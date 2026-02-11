@@ -18,7 +18,7 @@ import { GTPIcon } from "./GTPIcon";
 
 export default function Footer() {
   return (
-    <div className="relative bottom-0 bg-color-bg-default px-[20px] pt-[50px] pb-[150px] md:p-[50px] md:pb-[100px]">
+    <div className="gtp-native-hide-footer relative bottom-0 bg-color-bg-default px-[20px] pt-[50px] pb-[150px] md:p-[50px] md:pb-[100px]">
       <div className="flex flex-col md:flex-row md:justify-between">
         <div className="flex flex-col md:justify-between md:flex-wrap min-[1270px]:h-[350px] md:basis-[361px]">
           <div className="flex flex-col w-[176px]">
@@ -199,5 +199,4 @@ const FooterLink = ({ leftIcon, label, href }: { leftIcon: React.ReactNode, labe
     </Link>
   );
 }
-
 

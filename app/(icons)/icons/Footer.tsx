@@ -13,7 +13,7 @@ export default function Footer() {
   const isMobile = useUIContext((state) => state.isMobile);
 
   return (
-    <div className="pointer-events-none fixed bottom-0 left-0 right-0 top-0 z-50 flex flex-col justify-end overflow-hidden">
+    <div className="gtp-native-hide-footer pointer-events-none fixed bottom-0 left-0 right-0 top-0 z-50 flex flex-col justify-end overflow-hidden">
       <div className="relative">
         <div
           className="pointer-events-none fixed inset-0 -z-10 bg-color-ui-active"

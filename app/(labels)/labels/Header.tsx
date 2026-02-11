@@ -22,7 +22,7 @@ export default function Header({
 }) {
   const isMobile = useUIContext((state) => state.isMobile);
   return (
-    <div className="fixed flex flex-col w-full z-50 items-center">
+    <div className="gtp-native-hide-topbar fixed flex flex-col w-full z-50 items-center">
       <div className="absolute h-[90px] md:h-[170px] w-full overflow-clip">
         <div
           className="background-container !h-screen"

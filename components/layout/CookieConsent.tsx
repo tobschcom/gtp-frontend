@@ -5,13 +5,43 @@ import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ANALYTICS_CONFIG, getConsentUpdate } from '@/lib/analyticsConfig';
+import { Capacitor } from "@capacitor/core";
+
+const isNativeAppRuntime = () => {
+  if (Capacitor.isNativePlatform()) {
+    return true;
+  }
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  const w = window as Window & {
+    Capacitor?: { isNativePlatform?: () => boolean };
+    webkit?: { messageHandlers?: { bridge?: unknown } };
+  };
+
+  if (typeof w.Capacitor?.isNativePlatform === "function" && w.Capacitor.isNativePlatform()) {
+    return true;
+  }
+  if (w.webkit?.messageHandlers?.bridge) {
+    return true;
+  }
+
+  return /\bCapacitor\b/i.test(navigator.userAgent || "");
+};
 
 export default function CookieConsent() {
   const searchParams = useSearchParams();
   const isOgMode = searchParams?.get("is_og") === "true";
+  const isNativeApp = isNativeAppRuntime();
   const [consent, setConsent] = useState(true);
 
   useEffect(() => {
+    if (isNativeApp) {
+      setConsent(true);
+      return;
+    }
+
     if (isOgMode) {
       setConsent(true);
       return;
@@ -30,7 +60,7 @@ export default function CookieConsent() {
     } else {
       setConsent(false); // Show banner
     }
-  }, [isOgMode]);
+  }, [isNativeApp, isOgMode]);
 
   const acceptCookie = () => {
     setConsent(true);

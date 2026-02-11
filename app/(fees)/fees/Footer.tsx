@@ -49,7 +49,7 @@ export default function Footer({
   return (
     <div
       className={
-        "fixed bottom-[20px] md:bottom-0 left-0 right-0 flex flex-col-reverse md:flex-col justify-center px-[20px] z-20"
+        "gtp-native-hide-footer fixed bottom-[20px] md:bottom-0 left-0 right-0 flex flex-col-reverse md:flex-col justify-center px-[20px] z-20"
       }
     >
       <div className="relative pointer-events-none">

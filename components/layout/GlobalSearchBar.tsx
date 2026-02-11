@@ -22,9 +22,32 @@ import WorkWithUs from './WorkWithUs';
 import NotificationButtonExpandable from './FloatingBar/NotificationButtonExpandable';
 import { useTheme } from 'next-themes';
 import { IS_PRODUCTION } from '@/lib/helpers';
+import { Capacitor } from "@capacitor/core";
 
+const isNativeAppRuntime = () => {
+  if (Capacitor.isNativePlatform()) {
+    return true;
+  }
+  if (typeof window === "undefined") {
+    return false;
+  }
 
-export default function GlobalFloatingBar() {
+  const w = window as Window & {
+    Capacitor?: { isNativePlatform?: () => boolean };
+    webkit?: { messageHandlers?: { bridge?: unknown } };
+  };
+
+  if (typeof w.Capacitor?.isNativePlatform === "function" && w.Capacitor.isNativePlatform()) {
+    return true;
+  }
+  if (w.webkit?.messageHandlers?.bridge) {
+    return true;
+  }
+
+  return /\bCapacitor\b/i.test(navigator.userAgent || "");
+};
+
+function GlobalFloatingBarContent() {
   // const [showGlobalSearchBar, setShowGlobalSearchBar] = useLocalStorage("showGlobalSearchBar", true);
   const showGlobalSearchBar = true;
   const isMobile = useUIContext((state) => state.isMobile);
@@ -469,7 +492,7 @@ export default function GlobalFloatingBar() {
   if (!showGlobalSearchBar) return null;
 
   return (
-    <>
+    <div className="gtp-native-hide-global-floatingbar">
       <div className={`fixed z-global-search-backdrop bottom-[-200px] md:bottom-auto md:top-[0px] w-full max-w-[1920px] px-0 md:px-[13px] md:-mx-[5px] transition-[margin] duration-sidebar ease-sidebar flex justify-center`}>
 
         <div className="bg-color-bg-main z-[-1] relative bottom-0 top-0 md:bottom-auto md:top-0 left-0 right-0 h-[300px] md:h-[100px] overflow-hidden pointer-events-none sidebar-bg-mask">
@@ -694,8 +717,16 @@ export default function GlobalFloatingBar() {
           </FloatingBarContainer>
         </div>
       </div>
-    </>
+    </div>
   );
+}
+
+export default function GlobalFloatingBar() {
+  if (isNativeAppRuntime()) {
+    return null;
+  }
+
+  return <GlobalFloatingBarContent />;
 }
 
 const SearchContainer = ({ children }: { children: React.ReactNode }) => {

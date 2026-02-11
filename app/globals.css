@@ -721,7 +721,67 @@ input:focus-visible {
   transition: opacity 100ms ease-out; /* Quick fade-out */
 }
 
+html.gtp-native-app {
+  --gtp-native-safe-top-content: max(56px, calc(env(safe-area-inset-top) + 34px));
+  --gtp-native-safe-top-search: max(146px, calc(env(safe-area-inset-top) + 86px));
+  --gtp-native-safe-bottom-content: max(112px, env(safe-area-inset-bottom));
+}
+
 html.gtp-native-app .gtp-native-hide-logo {
   visibility: hidden !important;
   pointer-events: none !important;
+}
+
+html.gtp-native-app .gtp-native-hide-topbar {
+  display: none !important;
+}
+
+html.gtp-native-app .gtp-native-search-container {
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: calc(100vw - 24px) !important;
+}
+
+html.gtp-native-app .gtp-native-search-container.gtp-native-search-keyboard-open {
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: calc(100vw - 24px) !important;
+}
+
+html.gtp-native-app .gtp-native-hide-devtools {
+  display: none !important;
+}
+
+html.gtp-native-app .gtp-native-hide-global-floatingbar {
+  display: none !important;
+}
+
+html.gtp-native-app .gtp-native-hide-footer {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+html.gtp-native-app body {
+  padding-top: var(--gtp-native-safe-top-content, max(56px, calc(env(safe-area-inset-top) + 34px))) !important;
+}
+
+html.gtp-native-app main {
+  padding-top: var(--gtp-native-safe-top-content, max(56px, calc(env(safe-area-inset-top) + 34px))) !important;
+}
+
+html.gtp-native-app.gtp-native-search-open,
+html.gtp-native-app.gtp-native-search-open body {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+
+html.gtp-native-app #global-search-input {
+  font-size: 16px !important;
+}
+
+html.gtp-native-app .gtp-native-search-results {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
 }

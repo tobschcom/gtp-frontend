@@ -51,11 +51,14 @@ Prerequisites: macOS with full Xcode installed (not only Command Line Tools) and
    yarn cap:open:ios
    ```
 
-### Hosted URL
+### Mobile URL
 
-- Default mobile URL: `https://growthepie.com`
-- Override by setting `CAPACITOR_SERVER_URL` in your environment before sync/run.
-  Example:
+- Default iOS dev URL: `http://localhost:3000` (via `yarn cap:sync:ios`)
+- Production sync helper:
+  ```bash
+  yarn cap:sync:ios:prod
+  ```
+- Override explicitly with:
   ```bash
   CAPACITOR_SERVER_URL=https://dev.growthepie.com yarn cap:sync:ios
   ```

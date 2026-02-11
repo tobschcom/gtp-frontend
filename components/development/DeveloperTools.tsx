@@ -1,14 +1,15 @@
 import ApiTool, { GlobalSearchToggleButton } from "./ApiTool";
 import DarkModeToggleButton from "./DarkModeToggle";
 import NotificationTool from "./NotificationTool";
+import { Capacitor } from "@capacitor/core";
 
 export default function DeveloperTools() {
 
-  if (process.env.NEXT_PUBLIC_VERCEL_ENV === "production")
+  if (process.env.NEXT_PUBLIC_VERCEL_ENV === "production" || Capacitor.isNativePlatform())
     return null;
 
   return (
-    <div className="fixed bottom-0 left-0 bg-white dark:bg-black text-[0.6rem] leading-snug font-mono px-1 py-0.5 z-[9999] select-none">
+    <div className="gtp-native-hide-devtools fixed bottom-0 left-0 bg-white dark:bg-black text-[0.6rem] leading-snug font-mono px-1 py-0.5 z-[9999] select-none">
       <div className="flex gap-x-2">
         <div>
           <div className="block sm:hidden">{"< sm"}</div>
@@ -26,4 +27,3 @@ export default function DeveloperTools() {
     </div>
   )
 }
-

@@ -22,6 +22,29 @@ type ProvidersProps = {
   forcedTheme?: string;
 };
 
+const isNativeAppRuntime = () => {
+  if (Capacitor.isNativePlatform()) {
+    return true;
+  }
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  const w = window as Window & {
+    Capacitor?: { isNativePlatform?: () => boolean };
+    webkit?: { messageHandlers?: { bridge?: unknown } };
+  };
+
+  if (typeof w.Capacitor?.isNativePlatform === "function" && w.Capacitor.isNativePlatform()) {
+    return true;
+  }
+  if (w.webkit?.messageHandlers?.bridge) {
+    return true;
+  }
+
+  return /\bCapacitor\b/i.test(navigator.userAgent || "");
+};
+
 
 function createFetchHeaders(url: string): Headers {
   const headers = new Headers();
@@ -115,7 +138,7 @@ export function Providers({ children, forcedTheme }: ProvidersProps) {
   }, []);
 
   useEffect(() => {
-    if (!Capacitor.isNativePlatform()) return;
+    if (!isNativeAppRuntime()) return;
 
     document.documentElement.classList.add("gtp-native-app");
     return () => {

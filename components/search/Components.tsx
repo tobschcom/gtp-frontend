@@ -27,6 +27,30 @@ import { MasterURL } from "@/lib/urls";
 import { MasterResponse } from "@/types/api/MasterResponse";
 import { track } from "@/lib/tracking";
 import { getExpandedSearchTermsForBucket, getExcludedGroupLabelsForBucket, getBucketLabelForShortQuery } from "@/lib/searchExpansions";
+import { Capacitor } from "@capacitor/core";
+
+const isNativeAppRuntime = () => {
+  if (Capacitor.isNativePlatform()) {
+    return true;
+  }
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  const w = window as Window & {
+    Capacitor?: { isNativePlatform?: () => boolean };
+    webkit?: { messageHandlers?: { bridge?: unknown } };
+  };
+
+  if (typeof w.Capacitor?.isNativePlatform === "function" && w.Capacitor.isNativePlatform()) {
+    return true;
+  }
+  if (w.webkit?.messageHandlers?.bridge) {
+    return true;
+  }
+
+  return /\bCapacitor\b/i.test(navigator.userAgent || "");
+};
 
 function normalizeString(str: string) {
   return str.toLowerCase().replace(/\s+/g, '');
@@ -77,6 +101,16 @@ function isGlobalSearchInputElement(active: Element | null) {
 }
 
 const setDocumentScroll = (showScroll: boolean) => {
+  if (isNativeAppRuntime()) {
+    const root = document.documentElement;
+    if (showScroll) {
+      root.classList.remove("gtp-native-search-open");
+    } else {
+      root.classList.add("gtp-native-search-open");
+    }
+    return;
+  }
+
   if (showScroll) {
     document.body.classList.add("overflow-y-scroll");
     document.body.classList.remove("!overflow-y-hidden");
@@ -225,7 +259,7 @@ export const SearchComponent = () => {
   const isOpen = searchParams.get("search") === "true";
   const [showMore, setShowMore] = useState<{ [key: string]: boolean }>({});
 
-  const handleCloseSearch = () => {
+  const handleCloseSearch = useCallback(() => {
     // get existing query params
     let newSearchParams = new URLSearchParams(window.location.search)
 
@@ -236,7 +270,7 @@ export const SearchComponent = () => {
 
     window.history.replaceState(null, "", url);
     setDocumentScroll(true);
-  }
+  }, [pathname]);
 
   // Handle initial scroll state when page loads with search parameters
   useEffect(() => {
@@ -250,11 +284,63 @@ export const SearchComponent = () => {
     };
   }, [isOpen]);
 
+  useEffect(() => {
+    if (!isOpen || !isNativeAppRuntime()) {
+      return;
+    }
+
+    const preventBackgroundScroll = (event: TouchEvent | WheelEvent) => {
+      const targetNode = event.target as Node | null;
+      const container = document.querySelector(".gtp-native-search-container");
+      if (container && targetNode && container.contains(targetNode)) {
+        return;
+      }
+      event.preventDefault();
+    };
+
+    document.addEventListener("touchmove", preventBackgroundScroll, { passive: false });
+    document.addEventListener("wheel", preventBackgroundScroll, { passive: false });
+
+    return () => {
+      document.removeEventListener("touchmove", preventBackgroundScroll as EventListener);
+      document.removeEventListener("wheel", preventBackgroundScroll as EventListener);
+    };
+  }, [isOpen]);
+
+  // Native app: open keyboard when search overlay opens.
+  useEffect(() => {
+    if (!isOpen || !isNativeAppRuntime()) {
+      return;
+    }
+
+    let attempts = 0;
+    const maxAttempts = 8;
+
+    const focusSearchInput = () => {
+      const input = document.getElementById("global-search-input") as HTMLInputElement | null;
+      if (!input) {
+        attempts += 1;
+        if (attempts <= maxAttempts) {
+          setTimeout(focusSearchInput, 80);
+        }
+        return;
+      }
+
+      input.focus();
+      input.click();
+      const end = input.value.length;
+      input.setSelectionRange(end, end);
+    };
+
+    const t = setTimeout(focusSearchInput, 60);
+    return () => clearTimeout(t);
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
     <>
-      <SearchBar showMore={showMore} setShowMore={setShowMore} />
+      <SearchBar showMore={showMore} setShowMore={setShowMore} onRequestClose={handleCloseSearch} />
       <GrayOverlay onClick={handleCloseSearch} />
     </>
   )
@@ -265,6 +351,7 @@ interface SearchBarProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'on
   setShowMore?: any;
   showSearchContainer?: boolean;
   hideClearButtonOnMobile?: boolean; // Add this prop
+  onRequestClose?: () => void;
   onInputFocus?: () => void;
   onInputBlur?: () => void;
   onFocus?: (event: React.FocusEvent<HTMLInputElement>) => void;
@@ -394,7 +481,7 @@ const useAnimatedPlaceholder = (isActive: boolean, masterData?: MasterResponse, 
 };
 
 export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
-  ({ showMore, setShowMore, showSearchContainer=true, hideClearButtonOnMobile=false, onInputFocus, onInputBlur, onFocus, onBlur, placeholder = "Search: chains, metrics, applications, quick bites and more...", ...rest }, forwardedRef) => {
+  ({ showMore, setShowMore, showSearchContainer=true, hideClearButtonOnMobile=false, onRequestClose, onInputFocus, onInputBlur, onFocus, onBlur, placeholder = "Search: chains, metrics, applications, quick bites and more...", ...rest }, forwardedRef) => {
     // Local ref for internal SearchBar use
     const localInputRef = useRef<HTMLInputElement>(null);
 
@@ -457,6 +544,17 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
         onInputBlur();
       }
     };
+
+    const forceFocusInput = useCallback(() => {
+      const input = localInputRef.current;
+      if (!input) return;
+      input.focus();
+      input.click();
+      try {
+        const end = input.value.length;
+        input.setSelectionRange(end, end);
+      } catch {}
+    }, []);
 
     // Create a debounced version of the search update function
     const debouncedUpdateSearch = useMemo(
@@ -573,6 +671,8 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
                 onChange={handleSearchChange}
                 onFocus={handleInternalFocus}
                 onBlur={handleInternalBlur}
+                onTouchStart={forceFocusInput}
+                onMouseDown={forceFocusInput}
               />
               <div className={`absolute flex items-center gap-x-[10px] right-[15px] text-[8px] text-color-text-primary font-medium ${localQuery.length > 0 ? "opacity-100" : "opacity-0 pointer-events-none"} transition-opacity duration-200`}>
                 <div className="flex items-center px-[15px] h-[24px] border border-color-bg-medium rounded-full select-none">
@@ -615,7 +715,7 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
     return (
       <>
         {/* SearchContainer includes the thick border with rounded corners along with the main dark background */}
-        <SearchContainer>
+        <SearchContainer onRequestClose={onRequestClose}>
           {/* flex-col to make it so the children are stacked vertically */}
           <div className="flex w-full flex-col">
             {/* first child: the search bar w/ Icon and input */}
@@ -639,6 +739,8 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
                 onChange={handleSearchChange}
                 onFocus={handleInternalFocus}
                 onBlur={handleInternalBlur}
+                onTouchStart={forceFocusInput}
+                onMouseDown={forceFocusInput}
               />
               <div className={`absolute flex items-center gap-x-[10px] right-[20px] text-[8px] text-color-text-primary font-medium ${localQuery.length > 0 ? "opacity-100" : "opacity-0"} transition-opacity duration-200`}>
                 <div className="flex items-center px-[15px] h-[24px] border border-color-text-primary rounded-full select-none">
@@ -1663,8 +1765,12 @@ const Filters = ({ showMore, setShowMore }: { showMore: { [key: string]: boolean
     return () => window.removeEventListener('exitKeyboardNav', handleExitKeyboardNav);
   }, []);
 
+  if (!memoizedQuery) {
+    return null;
+  }
+
   return (
-    <div className="flex flex-col !pt-0 !pb-[0px] pl-[0px] pr-[0px] gap-y-[10px] max-h-[calc(100vh-220px)] overflow-y-auto">
+    <div className="gtp-native-search-results flex flex-1 min-h-0 w-full flex-col !pt-0 !pb-[0px] pl-[0px] pr-[0px] gap-y-[10px] overflow-y-auto overscroll-contain">
       {memoizedQuery && allFilteredData.length > 0 && <div
         key={memoizedQuery}
         className="flex flex-col pt-[10px] pb-[15px] pl-[10px] pr-[25px] gap-y-[15px] text-[10px]">
@@ -2053,13 +2159,17 @@ export const BucketItem = ({
   )
 }
 
-const SearchContainer = ({ children }: { children: React.ReactNode }) => {
+const SearchContainer = ({ children, onRequestClose: _onRequestClose }: { children: React.ReactNode; onRequestClose?: () => void }) => {
   const { allFilteredData } = useSearchBuckets();
   const searchParams = useSearchParams();
   const query = searchParams.get("query");
   const [hasOverflow, setHasOverflow] = useState(false);
   const [isScreenTall, setIsScreenTall] = useState(false);
   const [pressedKey, setPressedKey] = useState<string | null>(null);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const baselineViewportHeightRef = useRef(0);
+  const keyboardVisibleRef = useRef(false);
+  const isNativeApp = isNativeAppRuntime();
 
   // Calculate total number of results
   const totalResults = allFilteredData.reduce((total, { filteredData }) => total + filteredData.length, 0);
@@ -2121,16 +2231,112 @@ const SearchContainer = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
+  useEffect(() => {
+    if (!isNativeApp) {
+      return;
+    }
+
+    const viewport = window.visualViewport;
+    if (!viewport) {
+      return;
+    }
+
+    const syncKeyboard = () => {
+      const viewportHeight = viewport.height;
+      if (baselineViewportHeightRef.current === 0) {
+        baselineViewportHeightRef.current = viewportHeight;
+      } else {
+        baselineViewportHeightRef.current = Math.max(baselineViewportHeightRef.current, viewportHeight);
+      }
+
+      const heightDelta = baselineViewportHeightRef.current - viewportHeight;
+      const openThreshold = 150;
+      const closeThreshold = 90;
+      const keyboardVisible = keyboardVisibleRef.current
+        ? heightDelta > closeThreshold
+        : heightDelta > openThreshold;
+
+      keyboardVisibleRef.current = keyboardVisible;
+      setIsKeyboardVisible(prev => (prev === keyboardVisible ? prev : keyboardVisible));
+    };
+
+    syncKeyboard();
+    viewport.addEventListener('resize', syncKeyboard);
+    window.addEventListener('resize', syncKeyboard);
+
+    return () => {
+      viewport.removeEventListener('resize', syncKeyboard);
+      window.removeEventListener('resize', syncKeyboard);
+      baselineViewportHeightRef.current = 0;
+      keyboardVisibleRef.current = false;
+      setIsKeyboardVisible(false);
+    };
+  }, [isNativeApp]);
+
+  const effectiveViewportHeight = typeof window !== "undefined" ? window.innerHeight : 700;
+  const nativeBottomOffset = 102;
+  const hasQuery = Boolean(query?.trim());
+  const nativeBottomInset = isNativeApp
+    ? (isKeyboardVisible ? 12 : nativeBottomOffset)
+    : 0;
+  const nativeMaxHeight = Math.max(260, Math.min(460, effectiveViewportHeight - nativeBottomOffset - 8));
+  const nativeSearchTop = "var(--gtp-native-safe-top-search, max(146px, calc(env(safe-area-inset-top) + 86px)))";
+  const nativeKeyboardStyle = isNativeApp
+    ? (() => {
+        const centeredBase = {
+          left: "50%",
+          transform: "translateX(-50%)",
+        };
+
+        // Keep the first-open search state compact: input only, no empty full-height panel.
+        if (!hasQuery) {
+          return {
+            ...centeredBase,
+            top: nativeSearchTop,
+            bottom: "auto",
+            height: "auto",
+            maxHeight: "none",
+          };
+        }
+
+        if (isKeyboardVisible) {
+          return {
+            ...centeredBase,
+            top: nativeSearchTop,
+            bottom: `${nativeBottomInset}px`,
+            height: "auto",
+            maxHeight: "none",
+          };
+        }
+
+        return {
+          ...centeredBase,
+          top: "auto",
+          bottom: `${nativeBottomInset}px`,
+          height: `${nativeMaxHeight}px`,
+          maxHeight: `${nativeMaxHeight}px`,
+        };
+      })()
+    : undefined;
+  const contentContainerClass = hasQuery
+    ? "w-full flex-1 overflow-hidden flex flex-col min-h-0"
+    : "w-full overflow-hidden flex flex-col";
+  const shouldShowKeyboardShortcuts = !isNativeApp && !!showKeyboardShortcuts;
+  const containerZClass = isNativeApp ? "z-[10000]" : "z-[111]";
+
   return (
-    <div className="fixed top-[80px] md:top-[33px] left-[50%] translate-x-[-50%] z-[111] w-[calc(100vw-20px)] md:w-[660px] max-h-[calc(100vh-100px)] p-2.5 bg-color-bg-medium rounded-[32px] shadow-[0px_0px_50px_0px_rgba(0,0,0,1.00)] flex flex-col justify-start items-center">
+    <div
+      className={`gtp-native-search-container fixed top-[80px] md:top-[33px] left-[50%] translate-x-[-50%] ${containerZClass} w-[calc(100vw-20px)] md:w-[660px] max-h-[calc(100vh-100px)] p-2.5 bg-color-bg-medium rounded-[32px] shadow-[0px_0px_50px_0px_rgba(0,0,0,1.00)] flex flex-col justify-start items-center ${isKeyboardVisible ? "gtp-native-search-keyboard-open" : ""}`}
+      style={nativeKeyboardStyle}
+    >
       {/* Add a wrapper div that will handle the overflow */}
-      <div ref={contentRef} className="w-full flex-1 overflow-hidden flex flex-col min-h-0">
-        <div className={`w-full bg-color-ui-active rounded-t-[22px] ${hasOverflow ? 'rounded-bl-[22px]' : 'rounded-b-[22px]'} flex flex-col justify-start items-center gap-2.5 flex-shrink-0`}>
+      <div ref={contentRef} className={contentContainerClass}>
+        <div className={`w-full bg-color-ui-active rounded-t-[22px] ${hasOverflow ? 'rounded-bl-[22px]' : 'rounded-b-[22px]'} flex flex-col justify-start items-center gap-2.5 min-h-0 ${hasQuery ? "h-full" : "h-auto"}`}>
           {children}
         </div>
       </div>
       {/* Keyboard shortcuts will now stay at the bottom */}
-      <div className={`flex px-[10px] pt-2 pb-[5px] items-start gap-[15px] self-stretch flex-shrink-0 ${!showKeyboardShortcuts ? 'hidden' : ''} max-sm:hidden`}>
+      <div className={`flex px-[10px] pt-2 pb-[5px] items-start gap-[15px] self-stretch flex-shrink-0 ${!shouldShowKeyboardShortcuts ? 'hidden' : ''} max-sm:hidden`}>
         <div className="flex h-[21px] py-[2px] px-0 items-center gap-[5px]">
           <svg xmlns="http://www.w3.org/2000/svg" width="70" height="21" viewBox="0 0 70 21" fill="none">
             {/* Up arrow */}
@@ -2226,6 +2432,3 @@ const SearchContainer = ({ children }: { children: React.ReactNode }) => {
     </div>
   )
 }
-
-
-
